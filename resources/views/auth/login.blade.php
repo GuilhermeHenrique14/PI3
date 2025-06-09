@@ -298,7 +298,7 @@
                            id="remember" 
                            {{ old('remember') ? 'checked' : '' }}>
                     <label class="form-check-label" for="remember">
-                        Remember Me
+                        Lembre de mim
                     </label>
                 </div>
 

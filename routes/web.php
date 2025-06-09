@@ -1,27 +1,31 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
+// Removido: use Illuminate\Support\Facades\Auth; // Não é necessário se você não usa Auth::routes() diretamente
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
-use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\AuthController; // Seu controller de login/registro
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\AccountController;
 
 // Admin Controllers
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
-use App\Http\Controllers\Admin\UserController as AdminUserController; // Seu UserController já está aqui
+use App\Http\Controllers\Admin\UserController as AdminUserController;
+
+// NOVO: Importar os controllers de reset de senha
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::get('/categoria/{slug}', [CategoryController::class, 'show'])->name('categories.show');
 
 Route::get('/produtos', [ProductController::class, 'index'])->name('products.index');
-Route::get('/produtos/{product:slug}', [ProductController::class, 'show'])->name('products.show'); // Mantido product:slug
+Route::get('/produtos/{product:slug}', [ProductController::class, 'show'])->name('products.show');
 
 Route::get('/search', [ProductController::class, 'search'])->name('products.search');
 
@@ -30,10 +34,14 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::get('/register', [AuthController::class, 'showRegistrationForm'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
+
+    // ROTAS PARA "ESQUECI MINHA SENHA?" ADICIONADAS AQUI
+    Route::get('password/reset', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+    Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+    Route::get('password/reset/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+    Route::post('password/reset', [ResetPasswordController::class, 'reset'])->name('password.update'); // Frequentemente nomeada como 'password.update'
 });
 
-// Removido Auth::routes() pois você tem rotas customizadas com AuthController
-// Se precisar de reset de senha, você teria que adicionar as rotas manualmente ou usar o Laravel UI/Fortify
 
 Route::post('/logout', [AuthController::class, 'logout'])
     ->middleware('auth')
@@ -49,8 +57,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/carrinho/update-quantity-ajax', [CartController::class, 'updateQuantityAjax'])->name('cart.update.quantity.ajax');
 
     // Rota de Checkout
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout'); // Alterado para get, se for só para exibir
-    // Se checkout também processa, você pode precisar de uma rota POST separada para CheckoutController@store ou @process
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
     
     // Rotas de Pedidos (Orders)
     Route::prefix('orders')->name('orders.')->group(function () {
@@ -75,9 +82,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('products', AdminProductController::class);
     Route::resource('categories', AdminCategoryController::class);
     
-    // Rotas para Usuários (Admin)
     Route::resource('users', AdminUserController::class)->except(['show']);
-    // NOVA ROTA PARA ALTERNAR O STATUS ATIVO/INATIVO DO USUÁRIO
     Route::patch('users/{user}/toggle-active', [AdminUserController::class, 'toggleActiveStatus'])->name('users.toggle-active');
 });
 

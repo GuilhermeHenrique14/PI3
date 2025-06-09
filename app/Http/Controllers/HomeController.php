@@ -3,73 +3,66 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Product;
-use App\Models\Category;
+use App\Models\Product; // Supondo que você use
+use App\Models\Category; // Supondo que você use
 
 class HomeController extends Controller
 {
     public function index()
     {
-        // Slides para o Carrossel Principal
         $carouselSlides = [
             [
-                'image' => 'storage/images/banners/banner2.jpg',
-                'alt_text' => 'Promoção imperdível na TokenStore'
+                'image' => 'storage/images/banners/banner2.jpg', // Mantenha seus caminhos corretos
+                'alt_text' => 'Promoção imperdível na TokenStore',
+                'title' => 'Ofertas Que Incendeiam!', // NOVO
+                'subtitle' => 'Os melhores descontos em jogos e gift cards estão aqui. Não perca!' // NOVO
             ],
             [
                 'image' => 'storage/images/banners/banner1.jpg',
-                'alt_text' => 'Gift Cards Variados é na TokenStore'
+                'alt_text' => 'Gift Cards Variados é na TokenStore',
+                'title' => 'Seu Crédito Digital, Facilitado!', // NOVO
+                'subtitle' => 'Recarregue suas contas favoritas de forma rápida e segura.' // NOVO
             ],
             [
                 'image' => 'storage/images/banners/banner3.jpg',
-                'alt_text' => 'Lançamentos de Jogos Digitais - TokenStore'
+                'alt_text' => 'Lançamentos de Jogos Digitais - TokenStore',
+                'title' => 'Novidades Fresquinhas Chegando!', // NOVO
+                'subtitle' => 'Confira os últimos lançamentos e prepare-se para a diversão.' // NOVO
             ],
+            // Adicione mais slides conforme necessário
         ];
 
-        // Categorias em Destaque
+        // Seu código existente para $featuredCategories e $popularProducts permanece aqui...
+        // Exemplo:
         $specificSlugs = [
-            'gift-cards-xbox',
-            'gift-cards-psn',
-            'jogos-steam',
-            'gift-cards-netflix'
+            'gift-cards-xbox', 'gift-cards-psn', 'jogos-steam', 'gift-cards-netflix'
         ];
         $desiredFeaturedCount = 4;
-
-        $featuredCategories = Category::whereIn('slug', $specificSlugs)
-                                      ->take($desiredFeaturedCount)
-                                      ->get();
-
-        // Se menos categorias específicas foram encontradas, busca outras para completar
+        $featuredCategories = Category::whereIn('slug', $specificSlugs)->take($desiredFeaturedCount)->get();
         if ($featuredCategories->count() < $desiredFeaturedCount) {
             $additionalCategoriesNeeded = $desiredFeaturedCount - $featuredCategories->count();
             $alreadyFetchedSlugs = $featuredCategories->pluck('slug')->toArray();
-
             $otherCategories = Category::whereNotIn('slug', $alreadyFetchedSlugs)
-                                       ->orderBy('name', 'asc') // Ou 'created_at'
+                                       ->orderBy('name', 'asc')
                                        ->take($additionalCategoriesNeeded)
                                        ->get();
             $featuredCategories = $featuredCategories->merge($otherCategories);
         }
-
-        // Atribui ícones às categorias em destaque
         $featuredCategories = $featuredCategories->map(function ($category) {
-            $category->icon_image = 'images/categories/default_category_icon.png'; // Ícone padrão
-
-            // Ícones específicos baseados no slug
-            if ($category->slug === 'gift-cards-xbox') $category->icon_image = 'storage/images/banners/xboxbanner.jpg';
-            if ($category->slug === 'gift-cards-psn') $category->icon_image = 'storage/images/banners/psnbanner.jpg';
-            if ($category->slug === 'jogos-steam') $category->icon_image = 'storage/images/banners/steambanner.jpg';
-            if ($category->slug === 'gift-cards-netflix') $category->icon_image = 'storage/images/banners/netflixbanner.jpg';
-            // Adicione mais ifs para outros ícones específicos aqui
-
+            // Use asset() para garantir o caminho público correto
+            $category->icon_image = asset('images/categories/default_category_icon.png');
+            if ($category->slug === 'gift-cards-xbox') $category->icon_image = asset('storage/images/banners/xboxbanner.jpg');
+            if ($category->slug === 'gift-cards-psn') $category->icon_image = asset('storage/images/banners/psnbanner.jpg');
+            if ($category->slug === 'jogos-steam') $category->icon_image = asset('storage/images/banners/steambanner.jpg');
+            if ($category->slug === 'gift-cards-netflix') $category->icon_image = asset('storage/images/banners/netflixbanner.jpg');
             return $category;
         });
 
-        // Produtos Populares (ex: os 8 mais recentes)
         $popularProducts = Product::with('category')
                                  ->orderBy('created_at', 'desc')
                                  ->take(4)
                                  ->get();
+        // Fim do exemplo
 
         return view('home', compact('carouselSlides', 'featuredCategories', 'popularProducts'));
     }
