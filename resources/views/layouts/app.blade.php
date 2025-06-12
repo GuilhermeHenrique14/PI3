@@ -447,8 +447,6 @@
         }
         .navbar-collapse .btn { margin-top: 0.5rem; margin-bottom: 0.5rem; }
 
-
-        /* SEUS MEDIA QUERIES ORIGINAIS (INTACTOS) */
         @media (max-width: 1024px) {
             .nav-container { padding: 0 1.5rem; }
             .search-box { width: 250px; }
